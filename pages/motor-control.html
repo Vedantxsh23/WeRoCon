@@ -17,6 +17,257 @@
     <link rel="stylesheet" href="../assets/css/animated.css">
     <link rel="stylesheet" href="../assets/css/owl.css">
     <link rel="stylesheet" href="../assets/css/werocon-theme.css">
+
+    <style>
+      /* ── Chapter layout ── */
+      .doc-section { padding: 80px 0 40px; }
+      .doc-section + .doc-section { border-top: 1px solid var(--wr-line-2, #2a2f3a); }
+
+      .chapter-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--wr-accent, #e94560);
+        margin-bottom: 10px;
+      }
+
+      .chapter-title {
+        font-size: 32px;
+        font-weight: 700;
+        color: #e8edf5;
+        margin-bottom: 12px;
+      }
+
+      .chapter-subtitle {
+        font-size: 15px;
+        color: #8892a4;
+        max-width: 680px;
+        margin-bottom: 48px;
+        line-height: 1.7;
+      }
+
+      /* ── Steps ── */
+      .step-block { margin-bottom: 36px; }
+
+      .step-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 12px;
+      }
+
+      .step-num {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        color: var(--wr-accent, #e94560);
+        letter-spacing: .1em;
+        padding-top: 3px;
+        white-space: nowrap;
+      }
+
+      .step-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #e8edf5;
+        margin: 0;
+      }
+
+      .step-body {
+        padding-left: 52px;
+        color: #8892a4;
+        font-size: 14px;
+        line-height: 1.8;
+      }
+
+      .step-body ol, .step-body ul {
+        padding-left: 20px;
+        margin-top: 8px;
+      }
+
+      .step-body li { margin-bottom: 6px; }
+
+      /* ── Code blocks ── */
+      .code-block {
+        background: #0d1117;
+        border: 1px solid #2a2f3a;
+        border-radius: 6px;
+        padding: 18px 20px;
+        margin: 14px 0;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        color: #c9d1d9;
+        overflow-x: auto;
+        white-space: pre;
+      }
+
+      .code-block .comment { color: #6e7681; }
+      .code-block .cmd { color: #79c0ff; }
+
+      /* ── Spec / info tables ── */
+      .spec-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0 30px;
+        font-size: 13px;
+      }
+
+      .spec-table th {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: #8892a4;
+        border-bottom: 1px solid #2a2f3a;
+        padding: 10px 14px;
+        text-align: left;
+      }
+
+      .spec-table td {
+        padding: 10px 14px;
+        border-bottom: 1px solid #1c2130;
+        color: #c9d1d9;
+        vertical-align: top;
+      }
+
+      .spec-table td:first-child {
+        color: #8892a4;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      /* ── Warning / note callouts ── */
+      .callout {
+        border-left: 3px solid var(--wr-accent, #e94560);
+        background: rgba(233,69,96,.06);
+        border-radius: 0 6px 6px 0;
+        padding: 14px 18px;
+        margin: 16px 0;
+        font-size: 13px;
+        color: #c9d1d9;
+        line-height: 1.7;
+      }
+
+      .callout.note {
+        border-color: #58a6ff;
+        background: rgba(88,166,255,.06);
+      }
+
+      .callout strong { color: #e8edf5; }
+
+      /* ── MIT equation box ── */
+      .equation-box {
+        background: #0d1117;
+        border: 1px solid #2a2f3a;
+        border-radius: 6px;
+        padding: 20px 24px;
+        margin: 16px 0;
+        text-align: center;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 15px;
+        color: #79c0ff;
+        letter-spacing: .04em;
+      }
+
+      /* ── Chapter nav pills ── */
+      .chapter-nav {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 60px;
+      }
+
+      .chapter-pill {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #10151f;
+        border: 1px solid #2a2f3a;
+        border-radius: 6px;
+        padding: 12px 20px;
+        text-decoration: none !important;
+        transition: border-color .2s;
+        flex: 1;
+        min-width: 200px;
+      }
+
+      .chapter-pill:hover { border-color: var(--wr-accent, #e94560); }
+
+      .pill-num {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        color: var(--wr-accent, #e94560);
+        letter-spacing: .1em;
+      }
+
+      .pill-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #e8edf5;
+      }
+
+      /* ── Section divider ── */
+      .subsection-heading {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: #58a6ff;
+        margin: 36px 0 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #1c2130;
+      }
+
+      /* ── Control mode grid ── */
+      .mode-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 16px;
+        margin: 20px 0;
+      }
+
+      .mode-card {
+        background: #10151f;
+        border: 1px solid #2a2f3a;
+        border-radius: 6px;
+        padding: 18px;
+      }
+
+      .mode-card h5 {
+        font-size: 13px;
+        font-weight: 600;
+        color: #e8edf5;
+        margin: 0 0 6px;
+      }
+
+      .mode-card p {
+        font-size: 12px;
+        color: #8892a4;
+        margin: 0 0 8px;
+        line-height: 1.6;
+      }
+
+      .mode-eq {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        color: #79c0ff;
+        background: #0d1117;
+        padding: 6px 10px;
+        border-radius: 4px;
+      }
+
+      /* ── Module nav footer ── */
+      .module-footer-nav {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 60px;
+        padding-top: 40px;
+        border-top: 1px solid #2a2f3a;
+      }
+    </style>
   </head>
 
 <body>
@@ -53,39 +304,498 @@
     </div>
   </header>
 
-  <!-- ============ COMING SOON ============ -->
-  <section class="wr-coming-soon">
-    <div class="container" style="position: relative; z-index: 1;">
+  <!-- ============ PAGE HERO ============ -->
+  <section style="padding: 140px 0 60px; background: var(--wr-bg, #080c14);">
+    <div class="container">
       <div class="big-id">MODULE 02 // ACTUATION</div>
-      <h1>Motor Control</h1>
-      <p>
-        Closed-loop control of the ankle actuator is being documented —
-        covering motor selection, drivers, the control loop that turns
-        IMU gait-phase data into torque commands, and tuning notes.
+      <h1 class="chapter-title" style="font-size: 42px; margin-bottom: 16px;">Motor Control</h1>
+      <p class="chapter-subtitle">
+        Three subsystems work in sequence to drive the ankle actuator: the Raspberry Pi is set up as a headless compute node, a CAN bus bridges it to the motor, and the CubeMars AK80-9 is configured and tuned via Servo and MIT control modes.
       </p>
 
-      <div class="wr-progress-bar"><div class="fill" style="width: 28%;"></div></div>
-      <div class="wr-progress-label">Documentation in progress</div>
+      <!-- Chapter navigation -->
+      <div class="chapter-nav">
+        <a href="#ch-raspi" class="chapter-pill">
+          <span class="pill-num">CH 01</span>
+          <span class="pill-label">Raspberry Pi Setup</span>
+        </a>
+        <a href="#ch-can" class="chapter-pill">
+          <span class="pill-num">CH 02</span>
+          <span class="pill-label">CAN Bus Setup</span>
+        </a>
+        <a href="#ch-cubemars" class="chapter-pill">
+          <span class="pill-num">CH 03</span>
+          <span class="pill-label">CubeMars AK80-9</span>
+        </a>
+      </div>
+    </div>
+  </section>
 
-      <div class="wr-specs">
-        <div class="wr-spec-box">
-          <div class="spec-label">Will cover</div>
-          <p>Motor &amp; driver selection, wiring to the Pi 5, and power requirements.</p>
+  <!-- ============================================================ -->
+  <!-- CHAPTER 1 — RASPBERRY PI SETUP                               -->
+  <!-- ============================================================ -->
+  <section id="ch-raspi" class="doc-section">
+    <div class="container">
+
+      <div class="chapter-label">Chapter 01 — Compute Node</div>
+      <h2 class="chapter-title">Raspberry Pi Setup</h2>
+      <p class="chapter-subtitle">
+        The prosthetic leg runs headless — no monitor, keyboard, or mouse. This chapter covers OS flashing, first-boot wireless configuration, and establishing SSH and VNC remote access for development.
+      </p>
+
+      <!-- Hardware requirements -->
+      <div class="subsection-heading">Hardware Requirements</div>
+      <table class="spec-table">
+        <thead>
+          <tr><th>Component</th><th>Specification</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Raspberry Pi</td><td>Raspberry Pi 4 or Raspberry Pi 5</td></tr>
+          <tr><td>MicroSD Card</td><td>32 GB or larger (Class 10 / A1 rated)</td></tr>
+          <tr><td>SD Card Adapter</td><td>USB or full-size SD adapter for host computer</td></tr>
+          <tr><td>Host Computer</td><td>Windows / Linux / macOS on the same Wi-Fi network</td></tr>
+          <tr><td>Power Supply</td><td>Official Raspberry Pi adapter or regulated battery source</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Step 1 -->
+      <div class="subsection-heading">Flashing the OS</div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <span class="step-num">STEP 01</span>
+          <h4 class="step-title">Flash Raspberry Pi OS</h4>
         </div>
-        <div class="wr-spec-box">
-          <div class="spec-label">Will cover</div>
-          <p>Control loop architecture — reading IMU gait phase, computing torque/position commands.</p>
-        </div>
-        <div class="wr-spec-box">
-          <div class="spec-label">Will cover</div>
-          <p>Firmware setup, calibration routine, and safety limits / e-stop behavior.</p>
+        <div class="step-body">
+          Use <strong>Raspberry Pi Imager v2.0.7</strong> to write the OS image to the MicroSD card.
+          <ol>
+            <li>Insert the MicroSD card into the host computer via an SD adapter.</li>
+            <li>Open Raspberry Pi Imager and allow administrator permissions if prompted.</li>
+            <li>Select: <strong>Device</strong> → your Pi model · <strong>OS</strong> → Raspberry Pi OS (64-bit) · <strong>Storage</strong> → your MicroSD card.</li>
+            <li>In the advanced settings (gear icon), configure hostname, username, password, Wi-Fi credentials, and enable SSH before writing.</li>
+            <li>Click <strong>Write</strong> and wait for verification to complete.</li>
+            <li>Safely eject the MicroSD card.</li>
+          </ol>
         </div>
       </div>
 
-      <div style="margin-top: 56px; display:flex; gap:16px; flex-wrap:wrap; justify-content:center; position: relative; z-index: 1;">
-        <div class="main-white-button" style="border: 1px solid var(--wr-line-2); border-radius: 4px;"><a href="imu.html" style="color: var(--wr-text) !important; background: transparent !important;">← IMU Module</a></div>
-        <div class="main-white-button" style="border: 1px solid var(--wr-line-2); border-radius: 4px;"><a href="mechanical.html" style="color: var(--wr-text) !important; background: transparent !important;">Mechanical Module →</a></div>
+      <div class="step-block">
+        <div class="step-header">
+          <span class="step-num">STEP 02</span>
+          <h4 class="step-title">First Boot</h4>
+        </div>
+        <div class="step-body">
+          Insert the MicroSD card into the Raspberry Pi, connect power, and wait <strong>2–3 minutes</strong> for the system to initialise and connect to Wi-Fi.
+        </div>
       </div>
+
+      <!-- Step 3 — SSH -->
+      <div class="subsection-heading">Remote Access — SSH</div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <span class="step-num">STEP 03</span>
+          <h4 class="step-title">Connect via SSH (Windows — PuTTY)</h4>
+        </div>
+        <div class="step-body">
+          <ol>
+            <li>Open PuTTY.</li>
+            <li>Set <strong>Hostname</strong> to <code>prosthetic-leg.local</code>, <strong>Port</strong> to <code>22</code>, Connection Type to <strong>SSH</strong>.</li>
+            <li>Click <strong>Open</strong> and log in with your configured username and password.</li>
+          </ol>
+          <p style="margin-top:10px;">On <strong>Linux / macOS</strong>, open a terminal and run:</p>
+          <div class="code-block">ssh &lt;username&gt;@prosthetic-leg.local</div>
+        </div>
+      </div>
+
+      <!-- Step 4 — VNC -->
+      <div class="subsection-heading">Remote Access — VNC (Graphical)</div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <span class="step-num">STEP 04</span>
+          <h4 class="step-title">Enable VNC</h4>
+        </div>
+        <div class="step-body">
+          Run over SSH:
+          <div class="code-block">sudo raspi-config nonint do_vnc 0</div>
+          If you are on <strong>Raspberry Pi OS Bookworm</strong> and VNC shows a black screen, switch to X11:
+          <div class="code-block">sudo raspi-config nonint do_wayland W1
+sudo reboot</div>
+          Then open <strong>RealVNC Viewer</strong> on your host computer and connect to:
+          <div class="code-block">prosthetic-leg.local</div>
+        </div>
+      </div>
+
+      <table class="spec-table" style="margin-top:32px;">
+        <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>SSH (PuTTY)</td><td>Command-line access — primary development interface</td></tr>
+          <tr><td>VNC Viewer</td><td>Remote desktop access when a GUI is needed</td></tr>
+          <tr><td>Raspberry Pi Imager</td><td>OS installation and pre-boot configuration</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- CHAPTER 2 — CAN BUS SETUP                                    -->
+  <!-- ============================================================ -->
+  <section id="ch-can" class="doc-section">
+    <div class="container">
+
+      <div class="chapter-label">Chapter 02 — Communication Bus</div>
+      <h2 class="chapter-title">CAN Bus Setup</h2>
+      <p class="chapter-subtitle">
+        The CubeMars AK80-9 communicates over CAN at 1 Mbps. This chapter covers physical wiring of the CAN HAT, enabling the MCP2515 driver, automating the interface on boot, and verifying the link with a loopback test before connecting the motor.
+      </p>
+
+      <!-- Hardware -->
+      <div class="subsection-heading">Hardware Connections</div>
+      <div class="step-block">
+        <div class="step-header">
+          <span class="step-num">STEP 01</span>
+          <h4 class="step-title">Wire the CAN HAT to the Motor</h4>
+        </div>
+        <div class="step-body">
+          Mount a <strong>CAN HAT</strong> (e.g. Waveshare RS485/CAN HAT) on the Raspberry Pi GPIO header, then connect the motor's <strong>XT30 2+2 connector</strong>:
+          <ul>
+            <li><strong>CAN_H</strong> on HAT → CAN_H (White wire) on motor</li>
+            <li><strong>CAN_L</strong> on HAT → CAN_L (Blue wire) on motor</li>
+            <li>Battery power → motor via XT60-to-XT30 power lines</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Driver -->
+      <div class="subsection-heading">Driver & Library Configuration</div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <span class="step-num">STEP 02</span>
+          <h4 class="step-title">Enable the MCP2515 SPI Driver</h4>
+        </div>
+        <div class="step-body">
+          Open the boot configuration file over SSH:
+          <p style="margin: 8px 0 4px; color:#79c0ff; font-size:12px; font-family:'JetBrains Mono',monospace;">Raspberry Pi OS Bookworm:</p>
+          <div class="code-block">sudo nano /boot/firmware/config.txt</div>
+          <p style="margin: 8px 0 4px; color:#79c0ff; font-size:12px; font-family:'JetBrains Mono',monospace;">Older OS (Bullseye or earlier):</p>
+          <div class="code-block">sudo nano /boot/config.txt</div>
+          Scroll to the bottom and add:
+          <div class="code-block">dtparam=spi=on
+dtoverlay=mcp2515-can0,oscillator=12000000,interrupt=25,spimaxfrequency=2000000</div>
+          <div class="callout note"><strong>Note on oscillator:</strong> Check the metal crystal on your CAN HAT. If it reads <strong>12.000</strong> use <code>oscillator=12000000</code>. If it reads <strong>8.000</strong> use <code>oscillator=8000000</code>.</div>
+          Save (<code>Ctrl+O</code>, <code>Enter</code>), exit (<code>Ctrl+X</code>), then reboot:
+          <div class="code-block">sudo reboot</div>
+        </div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <span class="step-num">STEP 03</span>
+          <h4 class="step-title">Automate CAN Interface on Boot</h4>
+        </div>
+        <div class="step-body">
+          Create a network interface config so <code>can0</code> starts at 1 Mbps on every boot:
+          <div class="code-block">sudo nano /etc/network/interfaces.d/can0</div>
+          Paste:
+          <div class="code-block">auto can0
+iface can0 can static
+    bitrate 1000000
+    up /sbin/ip link set $IFACE txqueuelen 1000</div>
+          Save and exit.
+        </div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <span class="step-num">STEP 04</span>
+          <h4 class="step-title">Install Utilities & Python Library</h4>
+        </div>
+        <div class="step-body">
+          <div class="code-block"><span class="comment"># Command-line CAN tools</span>
+sudo apt update && sudo apt install can-utils -y
+
+<span class="comment"># Python SocketCAN library</span>
+sudo apt install python3-can -y</div>
+        </div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <span class="step-num">STEP 05</span>
+          <h4 class="step-title">Set the Motor's CAN ID</h4>
+        </div>
+        <div class="step-body">
+          Before connecting to the Pi, assign the motor its CAN address via the R-Link:
+          <ol>
+            <li>Connect the motor to your PC using the R-Link module.</li>
+            <li>Open <strong>CubeMars AK Config Tool</strong>.</li>
+            <li>Under <strong>Application Configuration</strong>, set <strong>CAN ID</strong> (e.g. <code>104</code> / <code>0x68</code>).</li>
+            <li>Click <strong>Write</strong> to save to the motor's flash memory.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Loopback -->
+      <div class="subsection-heading">Loopback Validation (Without Motor)</div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <span class="step-num">STEP 06</span>
+          <h4 class="step-title">Loopback Communication Check</h4>
+        </div>
+        <div class="step-body">
+          Verify the Pi's CAN controller, transceiver, and libraries work before powering the motor.
+          <div class="code-block"><span class="comment"># 1. Bring the interface down</span>
+sudo ip link set can0 down
+
+<span class="comment"># 2. Enable loopback mode</span>
+sudo ip link set can0 type can bitrate 1000000 loopback on
+
+<span class="comment"># 3. Bring it back up</span>
+sudo ip link set can0 up</div>
+          Open two SSH terminals:
+          <ul>
+            <li><strong>Terminal 1</strong> — listen: <div class="code-block" style="margin:6px 0;">candump can0</div></li>
+            <li><strong>Terminal 2</strong> — send a test packet: <div class="code-block" style="margin:6px 0;">cansend can0 123#DEADBEEF</div></li>
+          </ul>
+          <strong>Expected output in Terminal 1:</strong>
+          <div class="code-block">can0  123   [4]  DE AD BE EF</div>
+          If this appears, the CAN stack is fully functional.
+        </div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <span class="step-num">STEP 07</span>
+          <h4 class="step-title">Switch to Normal Mode (Connect Motor)</h4>
+        </div>
+        <div class="step-body">
+          <div class="code-block"><span class="comment"># Take interface down</span>
+sudo ip link set can0 down
+
+<span class="comment"># Disable loopback</span>
+sudo ip link set can0 type can bitrate 1000000 loopback off
+
+<span class="comment"># Bring back up — Pi is now live on the CAN bus</span>
+sudo ip link set can0 up</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- CHAPTER 3 — CUBEMARS AK80-9                                  -->
+  <!-- ============================================================ -->
+  <section id="ch-cubemars" class="doc-section">
+    <div class="container">
+
+      <div class="chapter-label">Chapter 03 — Actuator</div>
+      <h2 class="chapter-title">CubeMars AK80-9 V3.0</h2>
+      <p class="chapter-subtitle">
+        The AK80-9 is a high-torque BLDC actuator with an integrated controller, 9:1 planetary gearbox, and dual encoder feedback. This chapter covers initial hardware setup, driver board calibration, Servo Mode, and MIT Mode.
+      </p>
+
+      <!-- Specs -->
+      <div class="subsection-heading">Technical Specifications</div>
+      <table class="spec-table">
+        <thead><tr><th>Parameter</th><th>Specification</th></tr></thead>
+        <tbody>
+          <tr><td>Input Voltage</td><td>48 V (range: 18–52 V)</td></tr>
+          <tr><td>Rated Output Current (RMS)</td><td>20 A</td></tr>
+          <tr><td>Peak Output Current</td><td>60 A</td></tr>
+          <tr><td>CAN Bus Bitrate</td><td>1 Mbps</td></tr>
+          <tr><td>Inner Encoder</td><td>21-bit Single-turn Absolute</td></tr>
+          <tr><td>Outer Encoder</td><td>Optional 15-bit Single-turn Absolute</td></tr>
+          <tr><td>Communication Interface</td><td>CAN + UART</td></tr>
+          <tr><td>Ambient Temperature Range</td><td>-20 °C to 65 °C</td></tr>
+          <tr><td>Max Driver Temperature</td><td>100 °C</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Hardware Setup -->
+      <div class="subsection-heading">Initial Hardware Setup</div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <span class="step-num">STEP 01</span>
+          <h4 class="step-title">Physical Connections</h4>
+        </div>
+        <div class="step-body">
+          <ol>
+            <li>Connect the AK80-9 actuator to the driver board.</li>
+            <li>Connect the R-Link module to the driver's communication port.</li>
+            <li>Connect the R-Link USB interface to the host computer.</li>
+            <li>Connect the power supply (18–52 V).</li>
+            <li>Launch the <strong>CubeMars AK Config Tool</strong>.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <span class="step-num">STEP 02</span>
+          <h4 class="step-title">Establish Communication</h4>
+        </div>
+        <div class="step-body">
+          <ol>
+            <li>Navigate to the <strong>Connection</strong> panel in the software.</li>
+            <li>Select the appropriate COM port.</li>
+            <li>Set baud rate to <strong>921600</strong>.</li>
+            <li>Click <strong>Connect</strong>.</li>
+            <li>Verify that real-time motor parameters are actively updating in the dashboard.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Calibration -->
+      <div class="subsection-heading">Driver Board Calibration</div>
+
+      <div class="callout">
+        <strong>When to calibrate:</strong> Recalibration is required only after reinstalling the driver board, changing the three-phase wiring sequence, or updating firmware. The motor is factory-calibrated and does not need this out of the box.
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <span class="step-num">STEP 03</span>
+          <h4 class="step-title">Calibration Procedure</h4>
+        </div>
+        <div class="step-body">
+          <ol>
+            <li><strong>STEP 0</strong> — Confirm stable power supply and connection; enter the System Settings page.</li>
+            <li><strong>STEP 1</strong> — Click <strong>Read</strong> and wait for the connection interface.</li>
+            <li><strong>STEP 2</strong> — Click <strong>Motor Identification</strong>. After a brief beep the motor rotates for ~10 seconds. When the status message appears, motor parameter identification is complete.</li>
+            <li><strong>STEP 3</strong> — Click <strong>Encoder Identification</strong>. The motor rotates slowly for ~45 seconds. Wait for the completion message.</li>
+            <li><strong>STEP 4</strong> — Click <strong>Write</strong> to save calibration to flash.</li>
+          </ol>
+          <div class="callout">
+            <strong>⚠ Warning:</strong> Both identification steps must be performed under <strong>no-load conditions</strong>. Running encoder identification multiple times consecutively can cause sharp temperature rise in the motor.
+          </div>
+        </div>
+      </div>
+
+      <!-- Servo Mode -->
+      <div class="subsection-heading">Servo Mode</div>
+      <p style="color:#8892a4; font-size:14px; margin-bottom:20px; line-height:1.7;">
+        Servo Mode offloads position and velocity loops to the actuator's internal driver. Useful for testing joint configurations and calibrating absolute angle limits.
+      </p>
+
+      <div class="mode-grid">
+        <div class="mode-card">
+          <h5>Duty Cycle Mode</h5>
+          <p>Controls average motor voltage through PWM.</p>
+          <div class="mode-eq">V_avg = D × V_supply</div>
+        </div>
+        <div class="mode-card">
+          <h5>Current Loop Mode</h5>
+          <p>Regulates motor current to control torque.</p>
+          <div class="mode-eq">T = Kt × I</div>
+        </div>
+        <div class="mode-card">
+          <h5>Velocity Loop Mode</h5>
+          <p>Controls motor speed via error feedback.</p>
+          <div class="mode-eq">e_v = ω_ref − ω_actual</div>
+        </div>
+        <div class="mode-card">
+          <h5>Position Loop Mode</h5>
+          <p>Controls shaft angle.</p>
+          <div class="mode-eq">e_p = θ_ref − θ_actual</div>
+        </div>
+        <div class="mode-card">
+          <h5>Position-Velocity Loop</h5>
+          <p>Position control with velocity and acceleration constraints.</p>
+          <div class="mode-eq">|ω| ≤ ω_max, |α| ≤ α_max</div>
+        </div>
+        <div class="mode-card">
+          <h5>Current Brake Mode</h5>
+          <p>Generates braking torque via current regulation.</p>
+          <div class="mode-eq">T_brake = Kt × I_brake</div>
+        </div>
+      </div>
+
+      <div class="step-block" style="margin-top:28px;">
+        <div class="step-header">
+          <span class="step-num">STEP 04</span>
+          <h4 class="step-title">Running Servo Mode</h4>
+        </div>
+        <div class="step-body">
+          <ol>
+            <li>Open the <strong>Servo Control</strong> tab.</li>
+            <li>Select the desired control mode.</li>
+            <li>Configure the required command parameters (position, velocity, acceleration limits as applicable).</li>
+            <li>Click <strong>Run</strong> to execute.</li>
+            <li>Monitor motor response in the real-time status window.</li>
+          </ol>
+          <p style="margin-top:12px;"><strong>Origin configuration:</strong> Move the actuator to the desired reference position and click <strong>Set Origin</strong> to store it as zero. Click <strong>Back Origin</strong> to return to it.</p>
+          <div class="callout"><strong>⚠ Warning:</strong> The motor may move at high speed when returning to origin. Ensure the workspace is clear before executing this command.</div>
+        </div>
+      </div>
+
+      <!-- MIT Mode -->
+      <div class="subsection-heading">MIT Mode</div>
+      <p style="color:#8892a4; font-size:14px; margin-bottom:16px; line-height:1.7;">
+        MIT Mode combines position, velocity, and torque control in a single control law — the primary mode used during gait-phase-driven actuation.
+      </p>
+
+      <div class="equation-box">T = Kp(θ_ref − θ_actual) + Kd(ω_ref − ω_actual) + T_ff</div>
+
+      <div class="step-block" style="margin-top:24px;">
+        <div class="step-header">
+          <span class="step-num">STEP 05</span>
+          <h4 class="step-title">MIT Mode Configuration & Testing</h4>
+        </div>
+        <div class="step-body">
+          <ol>
+            <li>Navigate to the <strong>MIT Control</strong> tab and confirm communication is active.</li>
+            <li>Set the required parameters: <strong>Position (P)</strong>, <strong>Velocity (S)</strong>, <strong>Feedforward Torque (T)</strong>, <strong>KP</strong>, <strong>KD</strong>, <strong>Motor ID</strong>.</li>
+            <li><strong>Stiffness tuning (KP):</strong> Start low, increase gradually, observe position-holding stiffness.</li>
+            <li><strong>Damping tuning (KD):</strong> Hold KP constant, increase KD incrementally to reduce oscillation and overshoot.</li>
+            <li><strong>Velocity-only test:</strong> Set KP = 0, configure KD, enter desired velocity and execute.</li>
+            <li><strong>Torque-only test:</strong> Set KP = KD = 0, enter feedforward torque value and execute.</li>
+          </ol>
+
+          <p style="margin-top:16px;"><strong>Real-time parameters to monitor during testing:</strong></p>
+          <ul>
+            <li>Position · Velocity · Torque · Phase Current</li>
+            <li>Bus Voltage · Motor Temperature · MOSFET Temperature</li>
+          </ul>
+
+          <div class="callout" style="margin-top:16px;">
+            <strong>Emergency Stop:</strong> Press <strong>STOP</strong> immediately if abnormal behaviour is observed. Disconnect power if needed. Verify all parameter values before restarting.
+          </div>
+        </div>
+      </div>
+
+      <!-- Firmware -->
+      <div class="subsection-heading">Firmware Update</div>
+      <div class="step-block">
+        <div class="step-header">
+          <span class="step-num">STEP 06</span>
+          <h4 class="step-title">Update Firmware via AK Config Tool</h4>
+        </div>
+        <div class="step-body">
+          <ol>
+            <li>Select the corresponding firmware from the drop-down list.</li>
+            <li>Click <strong>Jump to IAP</strong>.</li>
+            <li>Click <strong>Upload</strong> and wait for the progress bar to reach 100%.</li>
+            <li>Click <strong>Jump to App</strong> and wait 5 seconds for the motor to enter operational mode.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Module nav -->
+      <div class="module-footer-nav">
+        <div class="main-white-button" style="border: 1px solid var(--wr-line-2); border-radius: 4px;">
+          <a href="imu.html" style="color: var(--wr-text) !important; background: transparent !important;">← IMU Module</a>
+        </div>
+        <div class="main-white-button" style="border: 1px solid var(--wr-line-2); border-radius: 4px;">
+          <a href="mechanical.html" style="color: var(--wr-text) !important; background: transparent !important;">Mechanical Module →</a>
+        </div>
+      </div>
+
     </div>
   </section>
 
