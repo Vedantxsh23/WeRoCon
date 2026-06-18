@@ -1,23 +1,265 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="WeRoCon IMU module — Raspberry Pi 5 OS setup, MPU6250 wiring, angle calculation, live plotting, calibration, and Kalman Filter implementation.">
+  <link rel="icon" href="../assets/images/werocon/logo.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <title>IMU — Raspberry OS Setup | WeRoCon</title>
+  <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/fontawesome.css">
+  <link rel="stylesheet" href="../assets/css/templatemo-space-dynamic.css">
+  <link rel="stylesheet" href="../assets/css/animated.css">
+  <link rel="stylesheet" href="../assets/css/owl.css">
+  <link rel="stylesheet" href="../assets/css/werocon-theme.css">
+  <style>
+    /* ── Chapter navigation pills ── */
+    .wr-chapter-nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 28px 0 0;
+    }
+    .wr-chapter-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none !important;
+      border: 1.5px solid var(--wr-line-2, #2a2a3a);
+      color: var(--wr-text, #c8cdd8) !important;
+      background: transparent;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+      cursor: pointer;
+    }
+    .wr-chapter-pill .pill-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--wr-line-2, #2a2a3a);
+      color: var(--wr-accent, #2574f5);
+      transition: background 0.2s;
+    }
+    .wr-chapter-pill:hover,
+    .wr-chapter-pill.active {
+      background: var(--wr-accent, #2574f5);
+      border-color: var(--wr-accent, #2574f5);
+      color: #fff !important;
+    }
+    .wr-chapter-pill:hover .pill-num,
+    .wr-chapter-pill.active .pill-num {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
 
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="WeRoCon IMU module — Raspberry Pi 5 OS setup and MPU6250 wiring guide.">
-    <link rel="icon" href="../assets/images/werocon/logo.png" type="image/png">
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    /* ── Chapter panels ── */
+    .wr-chapter {
+      display: none;
+    }
+    .wr-chapter.active {
+      display: block;
+    }
 
-    <title>IMU — Raspberry OS Setup | WeRoCon</title>
+    /* ── Chapter divider heading ── */
+    .wr-chapter-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--wr-line-2, #2a2a3a);
+    }
+    .wr-chapter-header .ch-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      background: var(--wr-accent, #2574f5);
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .wr-chapter-header h2 {
+      margin: 0;
+      font-size: 1.55rem;
+      font-weight: 700;
+    }
 
-    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/fontawesome.css">
-    <link rel="stylesheet" href="../assets/css/templatemo-space-dynamic.css">
-    <link rel="stylesheet" href="../assets/css/animated.css">
-    <link rel="stylesheet" href="../assets/css/owl.css">
-    <link rel="stylesheet" href="../assets/css/werocon-theme.css">
-  </head>
+    /* ── Math display ── */
+    .math-block {
+      background: var(--wr-bg-2, #12121e);
+      border: 1px solid var(--wr-line-2, #2a2a3a);
+      border-radius: 8px;
+      padding: 18px 22px;
+      margin: 16px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      overflow-x: auto;
+      color: var(--wr-text, #c8cdd8);
+    }
+    .math-block .math-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--wr-accent, #2574f5);
+      margin-bottom: 8px;
+    }
+
+    /* ── Callout boxes ── */
+    .wr-callout {
+      display: flex;
+      gap: 14px;
+      padding: 16px 18px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border: 1px solid;
+    }
+    .wr-callout.info {
+      background: rgba(37,116,245,0.08);
+      border-color: rgba(37,116,245,0.3);
+    }
+    .wr-callout.warn {
+      background: rgba(245,166,37,0.08);
+      border-color: rgba(245,166,37,0.3);
+    }
+    .wr-callout.success {
+      background: rgba(37,200,130,0.08);
+      border-color: rgba(37,200,130,0.3);
+    }
+    .wr-callout .co-icon {
+      font-size: 18px;
+      line-height: 1.4;
+      flex-shrink: 0;
+    }
+    .wr-callout .co-body {
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .wr-callout .co-body strong {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    /* ── State vector / matrix display ── */
+    .wr-matrix {
+      display: inline-block;
+      border-left: 2px solid var(--wr-accent, #2574f5);
+      border-right: 2px solid var(--wr-accent, #2574f5);
+      padding: 10px 18px;
+      margin: 4px 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      vertical-align: middle;
+      line-height: 2;
+    }
+
+    /* ── Step cards for Kalman ── */
+    .wr-kf-steps {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 24px 0;
+    }
+    @media (max-width: 700px) {
+      .wr-kf-steps { grid-template-columns: 1fr; }
+    }
+    .wr-kf-step {
+      background: var(--wr-bg-2, #12121e);
+      border: 1px solid var(--wr-line-2, #2a2a3a);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .wr-kf-step .kf-step-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--wr-accent, #2574f5);
+      margin-bottom: 8px;
+    }
+    .wr-kf-step h4 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .wr-kf-step p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--wr-muted, #7a8094);
+    }
+
+    /* ── Comparison table highlight ── */
+    .wr-compare td:first-child { font-weight: 600; }
+    .wr-compare .good { color: #37c882; }
+    .wr-compare .bad  { color: #f55252; }
+
+    /* ── TOC sub-entries ── */
+    .wr-doc-toc ul ul {
+      padding-left: 14px;
+      margin-top: 4px;
+    }
+    .wr-doc-toc ul ul li a {
+      font-size: 12px;
+      opacity: 0.75;
+    }
+    .wr-doc-toc ul ul li a:hover { opacity: 1; }
+
+    /* ── Chapter TOC sections ── */
+    .toc-chapter-group {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--wr-line-2, #2a2a3a);
+    }
+    .toc-chapter-group:first-child {
+      border-top: none;
+      margin-top: 0;
+      padding-top: 0;
+    }
+    .toc-ch-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--wr-accent, #2574f5);
+      padding: 0 0 6px;
+      display: block;
+    }
+
+    /* ── Flow diagram ── */
+    .wr-flow-diagram {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      background: var(--wr-bg-2, #12121e);
+      border: 1px solid var(--wr-line-2, #2a2a3a);
+      border-radius: 8px;
+      padding: 22px 28px;
+      line-height: 2;
+      white-space: pre;
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+
+    /* ── Alpha table highlight ── */
+    .alpha-good { color: #37c882; font-weight: 600; }
+  </style>
+</head>
 
 <body>
 
@@ -28,7 +270,7 @@
     </div>
   </div>
 
-  <!-- ============ HEADER / NAV ============ -->
+  <!-- HEADER / NAV -->
   <header class="header-area header-sticky background-header">
     <div class="container">
       <div class="row">
@@ -53,15 +295,15 @@
     </div>
   </header>
 
-  <!-- ============ PAGE HEADER ============ -->
+  <!-- PAGE HEADER -->
   <header class="wr-page-header">
     <div class="container">
-      <div class="eyebrow-label">Module 01 / Sensing — Raspberry OS Setup</div>
+      <div class="eyebrow-label">Module 01 / Sensing — IMU Documentation</div>
       <h1>IMU — Inertial Measurement</h1>
       <p>
-        Step-by-step setup for the prosthesis's sensing core: flash Raspberry Pi OS
-        onto the Pi 5, connect over SSH, then wire and read a 6-axis MPU6250
-        accelerometer + gyroscope over I2C to capture gait-phase data.
+        Full pipeline for the prosthesis sensing core: from flashing Raspberry Pi OS and wiring
+        the MPU6250, to live angle plotting with a Low Pass Filter, sensor calibration,
+        and a two-state Kalman Filter for drift-free orientation estimation.
       </p>
       <div class="wr-status-row">
         <div class="wr-status-item">PLATFORM <span class="val">Raspberry Pi 5</span></div>
@@ -69,10 +311,23 @@
         <div class="wr-status-item">BUS <span class="val">I2C — /dev/i2c-1</span></div>
         <div class="wr-status-item">DEFAULT ADDR <span class="val">0x68</span></div>
       </div>
+
+      <!-- Chapter switcher pills -->
+      <div class="wr-chapter-nav" id="chapterNav">
+        <button class="wr-chapter-pill active" data-chapter="ch1">
+          <span class="pill-num">01</span> OS Setup &amp; MPU6250 Wiring
+        </button>
+        <button class="wr-chapter-pill" data-chapter="ch2">
+          <span class="pill-num">02</span> Angles, Live Plot &amp; Calibration
+        </button>
+        <button class="wr-chapter-pill" data-chapter="ch3">
+          <span class="pill-num">03</span> Kalman Filter Implementation
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- ============ DOC CONTENT ============ -->
+  <!-- DOC CONTENT -->
   <section class="wr-doc-section">
     <div class="container">
       <div class="wr-doc-layout">
@@ -80,102 +335,154 @@
         <!-- TOC -->
         <aside class="wr-doc-toc">
           <div class="toc-label">On this page</div>
-          <ul>
-            <li><a href="#raspberry-pi-os-setup">Raspberry Pi OS Setup</a></li>
-            <li><a href="#what-you-need">What you need</a></li>
-            <li><a href="#step1">1 — Download Imager</a></li>
-            <li><a href="#step2">2 — Insert microSD</a></li>
-            <li><a href="#step3">3 — Select Device & OS</a></li>
-            <li><a href="#step4">4 — Edit Settings</a></li>
-            <li><a href="#step5">5 — Boot the Pi</a></li>
-            <li><a href="#step6">6 — Connect via SSH</a></li>
-            <li><a href="#step7">7 — Update System</a></li>
-            <li><a href="#summary1">Flash → SSH summary</a></li>
-            <li><a href="#mpu-need">MPU6250 — extra parts</a></li>
-            <li><a href="#step8">8 — Enable I2C</a></li>
-            <li><a href="#step9">9 — Wire the MPU6250</a></li>
-            <li><a href="#step10">10 — Install libraries</a></li>
-            <li><a href="#step11">11 — Detect on I2C bus</a></li>
-            <li><a href="#step12">12 — Read IMU data</a></li>
-            <li><a href="#troubleshoot">Troubleshooting</a></li>
-            <li><a href="#summary2">Full flow summary</a></li>
-          </ul>
+
+          <!-- TOC Ch1 -->
+          <div class="toc-chapter-group" id="toc-ch1">
+            <span class="toc-ch-label">01 — OS Setup &amp; Wiring</span>
+            <ul>
+              <li><a href="#rpi-setup">Raspberry Pi OS Setup</a></li>
+              <li><a href="#step1">1 — Download Imager</a></li>
+              <li><a href="#step2">2 — Insert microSD</a></li>
+              <li><a href="#step3">3 — Select Device &amp; OS</a></li>
+              <li><a href="#step4">4 — Edit Settings</a></li>
+              <li><a href="#step5">5 — Boot the Pi</a></li>
+              <li><a href="#step6">6 — Connect via SSH</a></li>
+              <li><a href="#step7">7 — Update System</a></li>
+              <li><a href="#summary1">Flash → SSH Summary</a></li>
+              <li><a href="#mpu-wiring">MPU6250 Wiring</a></li>
+              <li><a href="#step8">8 — Enable I2C</a></li>
+              <li><a href="#step9">9 — Wire MPU6250</a></li>
+              <li><a href="#step10">10 — Install Libraries</a></li>
+              <li><a href="#step11">11 — Detect on I2C Bus</a></li>
+              <li><a href="#step12">12 — Read IMU Data</a></li>
+              <li><a href="#troubleshoot">Troubleshooting</a></li>
+              <li><a href="#summary2">Full Flow Summary</a></li>
+            </ul>
+          </div>
+
+          <!-- TOC Ch2 -->
+          <div class="toc-chapter-group" id="toc-ch2" style="display:none;">
+            <span class="toc-ch-label">02 — Angles &amp; Calibration</span>
+            <ul>
+              <li><a href="#c2-lpf-why">1. Why Low Pass Filter?</a></li>
+              <li><a href="#c2-lpf-how">2. How LPF Works</a></li>
+              <li><a href="#c2-install">3. Install Libraries</a></li>
+              <li><a href="#c2-code">4. Full Code</a></li>
+              <li><a href="#c2-run">5. Run &amp; View in Browser</a></li>
+              <li><a href="#c2-cal-why">6. Why Calibration?</a></li>
+              <li><a href="#c2-cal-how">7. How to Calibrate</a></li>
+              <li><a href="#c2-cal-apply">8. Apply Offsets</a></li>
+              <li><a href="#c2-summary">Full Flow Summary</a></li>
+            </ul>
+          </div>
+
+          <!-- TOC Ch3 -->
+          <div class="toc-chapter-group" id="toc-ch3" style="display:none;">
+            <span class="toc-ch-label">03 — Kalman Filter</span>
+            <ul>
+              <li><a href="#kf-intro">Introduction</a></li>
+              <li><a href="#kf-why">Why Two-State?</a></li>
+              <li><a href="#kf-state">State Vector</a></li>
+              <li><a href="#kf-transition">State Transition</a></li>
+              <li><a href="#kf-control">Control Matrix</a></li>
+              <li><a href="#kf-predict">Prediction Step</a></li>
+              <li><a href="#kf-cov">Covariance Matrix</a></li>
+              <li><a href="#kf-q">Process Noise</a></li>
+              <li><a href="#kf-covprop">Covariance Propagation</a></li>
+              <li><a href="#kf-meas">Measurement Model</a></li>
+              <li><a href="#kf-residual">Residual</a></li>
+              <li><a href="#kf-dynR">Dynamic Measurement Noise</a></li>
+              <li><a href="#kf-innov">Innovation Covariance</a></li>
+              <li><a href="#kf-gain">Kalman Gain</a></li>
+              <li><a href="#kf-update">State Update</a></li>
+              <li><a href="#kf-covupdate">Covariance Update</a></li>
+              <li><a href="#kf-outputs">Estimated Outputs</a></li>
+              <li><a href="#kf-advantages">Advantages</a></li>
+              <li><a href="#kf-conclusion">Conclusion</a></li>
+            </ul>
+          </div>
         </aside>
 
-        <!-- CONTENT -->
+        <!-- CONTENT AREA -->
         <main class="wr-doc-content">
 
-          <h2 id="raspberry-pi-os-setup" style="margin-top:0;">Raspberry Pi OS Setup</h2>
+          <!-- ══════════════════════════════════════════
+               CHAPTER 1 — OS Setup & MPU6250 Wiring
+               ══════════════════════════════════════════ -->
+          <div class="wr-chapter active" id="ch1">
 
-          <h2 id="what-you-need">What you need</h2>
-          <table>
-            <tr><th>Item</th><th>Details</th></tr>
-            <tr><td>Raspberry Pi 5</td><td>4GB or 8GB</td></tr>
-            <tr><td>microSD Card</td><td>Minimum 16GB, Class 10</td></tr>
-            <tr><td>microSD Card Reader</td><td>USB adapter</td></tr>
-            <tr><td>Power Supply</td><td>USB-C 5V 5A (official Pi 5 adapter)</td></tr>
-            <tr><td>Laptop / PC</td><td>Windows / macOS / Linux</td></tr>
-            <tr><td>WiFi</td><td>2.4GHz or 5GHz network</td></tr>
-          </table>
+            <div class="wr-chapter-header">
+              <span class="ch-badge">CH 01</span>
+              <div>
+                <h2 style="margin:0;">Raspberry Pi OS Setup &amp; MPU6250 Wiring</h2>
+                <p style="margin:4px 0 0; font-size:13px; color:var(--wr-muted,#7a8094);">Flash the OS, connect over SSH, wire the 6-axis IMU over I2C</p>
+              </div>
+            </div>
 
-          <h2 id="step1">Step 1 — Download Raspberry Pi Imager</h2>
-          <p>On your laptop, download the imager from:</p>
-          <pre>https://www.raspberrypi.com/software/</pre>
-          <p>Install and open it.</p>
+            <h2 id="rpi-setup" style="margin-top:0;">Raspberry Pi OS Setup</h2>
 
-          <h2 id="step2">Step 2 — Insert microSD Card</h2>
-          <p>Plug your microSD card into the card reader, then plug it into your laptop.</p>
+            <h2 id="step1-prereqs">What you need</h2>
+            <table>
+              <tr><th>Item</th><th>Details</th></tr>
+              <tr><td>Raspberry Pi 5</td><td>4GB or 8GB</td></tr>
+              <tr><td>microSD Card</td><td>Minimum 16GB, Class 10</td></tr>
+              <tr><td>microSD Card Reader</td><td>USB adapter</td></tr>
+              <tr><td>Power Supply</td><td>USB-C 5V 5A (official Pi 5 adapter)</td></tr>
+              <tr><td>Laptop / PC</td><td>Windows / macOS / Linux</td></tr>
+              <tr><td>WiFi</td><td>2.4GHz or 5GHz network</td></tr>
+            </table>
 
-          <h2 id="step3">Step 3 — Select Device, OS & Storage</h2>
-          <p>In Raspberry Pi Imager, set the following:</p>
-          <table>
-            <tr><th>Field</th><th>What to Choose</th></tr>
-            <tr><td>Choose Device</td><td>Raspberry Pi 5</td></tr>
-            <tr><td>Choose OS</td><td>Raspberry Pi OS (other) → <code>Raspberry Pi OS Lite (64-bit)</code></td></tr>
-            <tr><td>Choose Storage</td><td>Your microSD card</td></tr>
-          </table>
-          <p>Click <strong>Next</strong>.</p>
+            <h2 id="step1">Step 1 — Download Raspberry Pi Imager</h2>
+            <p>On your laptop, download the imager from:</p>
+            <pre>https://www.raspberrypi.com/software/</pre>
+            <p>Install and open it.</p>
 
-          <h2 id="step4">Step 4 — Edit Settings (Important)</h2>
-          <p>When asked to apply custom settings → click <strong>Edit Settings</strong>.</p>
+            <h2 id="step2">Step 2 — Insert microSD Card</h2>
+            <p>Plug your microSD card into the card reader, then plug it into your laptop.</p>
 
-          <h3>General tab</h3>
-          <pre>Hostname:       raspberrypi
+            <h2 id="step3">Step 3 — Select Device, OS &amp; Storage</h2>
+            <p>In Raspberry Pi Imager, set the following:</p>
+            <table>
+              <tr><th>Field</th><th>What to Choose</th></tr>
+              <tr><td>Choose Device</td><td>Raspberry Pi 5</td></tr>
+              <tr><td>Choose OS</td><td>Raspberry Pi OS (other) → <code>Raspberry Pi OS Lite (64-bit)</code></td></tr>
+              <tr><td>Choose Storage</td><td>Your microSD card</td></tr>
+            </table>
+            <p>Click <strong>Next</strong>.</p>
+
+            <h2 id="step4">Step 4 — Edit Settings (Important)</h2>
+            <p>When asked to apply custom settings → click <strong>Edit Settings</strong>.</p>
+            <h3>General tab</h3>
+            <pre>Hostname:       raspberrypi
 Username:       pi
 Password:       [choose a password]
 WiFi SSID:      [your WiFi name]
 WiFi Password:  [your WiFi password]</pre>
+            <h3>Services tab</h3>
+            <pre>[x] Enable SSH   ← Must turn this ON</pre>
+            <p>Click <strong>Save → Yes → Yes</strong>.</p>
+            <blockquote>⏳ Flashing takes about 5–10 minutes.</blockquote>
 
-          <h3>Services tab</h3>
-          <pre>[x] Enable SSH   ← Must turn this ON</pre>
+            <h2 id="step5">Step 5 — Boot the Pi</h2>
+            <p>Eject the microSD card from your laptop, insert it into the <strong>bottom slot</strong> of the Raspberry Pi 5, plug in the power cable, then wait <strong>60 seconds</strong>.</p>
 
-          <p>Click <strong>Save → Yes → Yes</strong>.</p>
-          <blockquote>⏳ Flashing takes about 5–10 minutes.</blockquote>
+            <h2 id="step6">Step 6 — Connect via SSH</h2>
+            <p>Open Terminal (Mac/Linux) or Command Prompt (Windows):</p>
+            <pre>ssh pi@raspberrypi.local</pre>
+            <p>Type your password when asked. You should see:</p>
+            <pre>pi@raspberrypi:~ $</pre>
+            <blockquote>
+              If it doesn't connect, find your Pi's IP from your WiFi router and try:
+              <pre style="margin-top:10px;">ssh pi@192.168.x.x</pre>
+            </blockquote>
 
-          <h2 id="step5">Step 5 — Boot the Pi</h2>
-          <p>
-            Eject the microSD card from your laptop, insert it into the
-            <strong>bottom slot</strong> of the Raspberry Pi 5, plug in the power
-            cable, then wait <strong>60 seconds</strong>.
-          </p>
+            <h2 id="step7">Step 7 — Update the System</h2>
+            <p>Once connected, run:</p>
+            <pre>sudo apt update && sudo apt upgrade -y</pre>
+            <p>Done — your Raspberry Pi 5 is ready to use. ✅</p>
 
-          <h2 id="step6">Step 6 — Connect via SSH</h2>
-          <p>Open Terminal (Mac/Linux) or Command Prompt (Windows):</p>
-          <pre>ssh pi@raspberrypi.local</pre>
-          <p>Type your password when asked. You should see:</p>
-          <pre>pi@raspberrypi:~ $</pre>
-          <blockquote>
-            If it doesn't connect, find your Pi's IP from your WiFi router and try:
-            <pre style="margin-top:10px;">ssh pi@192.168.x.x</pre>
-          </blockquote>
-
-          <h2 id="step7">Step 7 — Update the System</h2>
-          <p>Once connected, run:</p>
-          <pre>sudo apt update && sudo apt upgrade -y</pre>
-          <p>Done — your Raspberry Pi 5 is ready to use. ✅</p>
-
-          <h2 id="summary1">Quick Summary — Flash to SSH</h2>
-          <div class="wr-flow-diagram">Download Raspberry Pi Imager on laptop
+            <h2 id="summary1">Quick Summary — Flash to SSH</h2>
+            <div class="wr-flow-diagram">Download Raspberry Pi Imager on laptop
             │
    Insert microSD into laptop
             │
@@ -189,122 +496,85 @@ WiFi Password:  [your WiFi password]</pre>
             │
    <span class="step">ssh pi@raspberrypi.local ✅</span></div>
 
-          <hr class="wr-doc-hr">
+            <hr class="wr-doc-hr">
 
-          <!-- ===================== MPU6250 SECTION ===================== -->
+            <h2 id="mpu-wiring" style="margin-top:0;">MPU6250 — Wiring &amp; Setup</h2>
+            <p>Connect and read accelerometer + gyroscope data from the MPU6250 using I2C on the Raspberry Pi 5.</p>
 
-          <h2 id="mpu-need" style="margin-top:0;">MPU6250 — Wiring & Setup</h2>
-          <p>
-            Connect and read accelerometer + gyroscope data from the MPU6250
-            using I2C on the Raspberry Pi 5.
-          </p>
+            <h3>What you need (extra)</h3>
+            <table>
+              <tr><th>Item</th><th>Details</th></tr>
+              <tr><td>MPU6250 Module</td><td>6-axis IMU (Accelerometer + Gyroscope)</td></tr>
+              <tr><td>Jumper Wires</td><td>4x Female-to-Female</td></tr>
+              <tr><td>Breadboard</td><td>Optional, for easy wiring</td></tr>
+            </table>
 
-          <h3>What you need (extra)</h3>
-          <table>
-            <tr><th>Item</th><th>Details</th></tr>
-            <tr><td>MPU6250 Module</td><td>6-axis IMU (Accelerometer + Gyroscope)</td></tr>
-            <tr><td>Jumper Wires</td><td>4x Female-to-Female</td></tr>
-            <tr><td>Breadboard</td><td>Optional, for easy wiring</td></tr>
-          </table>
-
-          <h2 id="step8">Step 8 — Enable I2C on Raspberry Pi 5</h2>
-          <p>The MPU6250 communicates via <strong>I2C</strong>, which is disabled by default. Enable it:</p>
-          <pre>sudo raspi-config</pre>
-          <p>Navigate using arrow keys:</p>
-          <pre>Interface Options → I2C → Yes → OK → Finish</pre>
-          <p>Then reboot:</p>
-          <pre>sudo reboot</pre>
-          <p>SSH back in after reboot:</p>
-          <pre>ssh pi@raspberrypi.local</pre>
-          <p>Verify I2C is active:</p>
-          <pre>ls /dev/i2c*
+            <h2 id="step8">Step 8 — Enable I2C on Raspberry Pi 5</h2>
+            <p>The MPU6250 communicates via <strong>I2C</strong>, which is disabled by default. Enable it:</p>
+            <pre>sudo raspi-config</pre>
+            <p>Navigate using arrow keys:</p>
+            <pre>Interface Options → I2C → Yes → OK → Finish</pre>
+            <p>Then reboot:</p>
+            <pre>sudo reboot</pre>
+            <p>SSH back in after reboot:</p>
+            <pre>ssh pi@raspberrypi.local</pre>
+            <p>Verify I2C is active:</p>
+            <pre>ls /dev/i2c*
 <span class="cmt"># Should show: /dev/i2c-1</span></pre>
 
-          <h2 id="step9">Step 9 — Wire the MPU6250 to Raspberry Pi 5</h2>
-          <p>Connect using <strong>4 jumper wires</strong> only:</p>
-          <table>
-            <tr><th>MPU6250 Pin</th><th>Raspberry Pi 5 Pin</th><th>Description</th></tr>
-            <tr><td><code>VCC</code></td><td>Pin 1 — 3.3V</td><td>Power</td></tr>
-            <tr><td><code>GND</code></td><td>Pin 6 — GND</td><td>Ground</td></tr>
-            <tr><td><code>SDA</code></td><td>Pin 3 — GPIO 2</td><td>I2C Data</td></tr>
-            <tr><td><code>SCL</code></td><td>Pin 5 — GPIO 3</td><td>I2C Clock</td></tr>
-          </table>
+            <h2 id="step9">Step 9 — Wire the MPU6250 to Raspberry Pi 5</h2>
+            <p>Connect using <strong>4 jumper wires</strong> only:</p>
+            <table>
+              <tr><th>MPU6250 Pin</th><th>Raspberry Pi 5 Pin</th><th>Description</th></tr>
+              <tr><td><code>VCC</code></td><td>Pin 1 — 3.3V</td><td>Power</td></tr>
+              <tr><td><code>GND</code></td><td>Pin 6 — GND</td><td>Ground</td></tr>
+              <tr><td><code>SDA</code></td><td>Pin 3 — GPIO 2</td><td>I2C Data</td></tr>
+              <tr><td><code>SCL</code></td><td>Pin 5 — GPIO 3</td><td>I2C Clock</td></tr>
+            </table>
+            <blockquote class="warn">⚠ Always use <strong>3.3V</strong> for VCC — never 5V. The MPU6250 is a 3.3V sensor and 5V will damage it.</blockquote>
 
-          <blockquote class="warn">
-            ⚠ Always use <strong>3.3V</strong> for VCC — never 5V. The MPU6250 is a 3.3V sensor
-            and 5V will damage it.
-          </blockquote>
+            <h3>Pi 5 GPIO Diagram (relevant pins)</h3>
+            <div class="wr-gpio-table">
+              <div class="wr-gpio-row highlight"><span class="pin-num">1</span><span class="pin-label power">3.3V</span><span class="pin-desc">← VCC (MPU6250 power)</span></div>
+              <div class="wr-gpio-row"><span class="pin-num">2</span><span class="pin-label power">5V</span><span class="pin-desc">not used</span></div>
+              <div class="wr-gpio-row highlight"><span class="pin-num">3</span><span class="pin-label data">GPIO 2 (SDA)</span><span class="pin-desc">← SDA (I2C Data)</span></div>
+              <div class="wr-gpio-row"><span class="pin-num">4</span><span class="pin-label power">5V</span><span class="pin-desc">not used</span></div>
+              <div class="wr-gpio-row highlight"><span class="pin-num">5</span><span class="pin-label data">GPIO 3 (SCL)</span><span class="pin-desc">← SCL (I2C Clock)</span></div>
+              <div class="wr-gpio-row highlight"><span class="pin-num">6</span><span class="pin-label gnd">GND</span><span class="pin-desc">← GND (Ground)</span></div>
+            </div>
 
-          <h3>Pi 5 GPIO Diagram (relevant pins)</h3>
-          <div class="wr-gpio-table">
-            <div class="wr-gpio-row highlight">
-              <span class="pin-num">1</span>
-              <span class="pin-label power">3.3V</span>
-              <span class="pin-desc">← VCC (MPU6250 power)</span>
-            </div>
-            <div class="wr-gpio-row">
-              <span class="pin-num">2</span>
-              <span class="pin-label power">5V</span>
-              <span class="pin-desc">not used</span>
-            </div>
-            <div class="wr-gpio-row highlight">
-              <span class="pin-num">3</span>
-              <span class="pin-label data">GPIO 2 (SDA)</span>
-              <span class="pin-desc">← SDA (I2C Data)</span>
-            </div>
-            <div class="wr-gpio-row">
-              <span class="pin-num">4</span>
-              <span class="pin-label power">5V</span>
-              <span class="pin-desc">not used</span>
-            </div>
-            <div class="wr-gpio-row highlight">
-              <span class="pin-num">5</span>
-              <span class="pin-label data">GPIO 3 (SCL)</span>
-              <span class="pin-desc">← SCL (I2C Clock)</span>
-            </div>
-            <div class="wr-gpio-row highlight">
-              <span class="pin-num">6</span>
-              <span class="pin-label gnd">GND</span>
-              <span class="pin-desc">← GND (Ground)</span>
-            </div>
-          </div>
+            <h3>AD0 pin — I2C address</h3>
+            <table>
+              <tr><th>AD0</th><th>I2C Address</th></tr>
+              <tr><td>GND (or unconnected)</td><td><code>0x68</code> ← default</td></tr>
+              <tr><td>3.3V</td><td><code>0x69</code></td></tr>
+            </table>
+            <p>Leave AD0 unconnected to use the default address <code>0x68</code>.</p>
 
-          <h3>AD0 pin — I2C address</h3>
-          <table>
-            <tr><th>AD0</th><th>I2C Address</th></tr>
-            <tr><td>GND (or unconnected)</td><td><code>0x68</code> ← default</td></tr>
-            <tr><td>3.3V</td><td><code>0x69</code></td></tr>
-          </table>
-          <p>Leave AD0 unconnected to use the default address <code>0x68</code>.</p>
-
-          <h2 id="step10">Step 10 — Install Required Libraries</h2>
-
-          <h3>Install I2C tools</h3>
-          <pre>sudo apt install -y i2c-tools python3-smbus</pre>
-
-          <h3>Create a virtual environment</h3>
-          <pre>python3 -m venv .venv
+            <h2 id="step10">Step 10 — Install Required Libraries</h2>
+            <h3>Install I2C tools</h3>
+            <pre>sudo apt install -y i2c-tools python3-smbus</pre>
+            <h3>Create a virtual environment</h3>
+            <pre>python3 -m venv .venv
 source .venv/bin/activate</pre>
-          <blockquote>You will see <code>(.venv)</code> at the start of your terminal — this means it is active.</blockquote>
-
-          <h3>Install Python libraries</h3>
-          <pre>pip install smbus2
+            <blockquote>You will see <code>(.venv)</code> at the start of your terminal — this means it is active.</blockquote>
+            <h3>Install Python libraries</h3>
+            <pre>pip install smbus2
 pip install mpu6050-raspberrypi</pre>
+            <h3>Library overview</h3>
+            <table>
+              <tr><th>Library</th><th>Purpose</th></tr>
+              <tr><td><code>smbus2</code></td><td>Communicate with I2C devices from Python</td></tr>
+              <tr><td><code>mpu6050-raspberrypi</code></td><td>Ready-made driver to read MPU6250/6050 data</td></tr>
+              <tr><td><code>i2c-tools</code></td><td>Scan and detect I2C devices on the bus</td></tr>
+              <tr><td><code>python3-smbus</code></td><td>System-level I2C support</td></tr>
+            </table>
 
-          <h3>Library overview</h3>
-          <table>
-            <tr><th>Library</th><th>Purpose</th></tr>
-            <tr><td><code>smbus2</code></td><td>Communicate with I2C devices from Python</td></tr>
-            <tr><td><code>mpu6050-raspberrypi</code></td><td>Ready-made driver to read MPU6250/6050 data</td></tr>
-            <tr><td><code>i2c-tools</code></td><td>Scan and detect I2C devices on the bus</td></tr>
-            <tr><td><code>python3-smbus</code></td><td>System-level I2C support</td></tr>
-          </table>
-
-          <h2 id="step11">Step 11 — Detect MPU6250 on I2C Bus</h2>
-          <p>Run a scan to confirm the sensor is wired correctly and detected:</p>
-          <pre>sudo i2cdetect -y 1</pre>
-          <p>Expected output:</p>
-          <pre>     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+            <h2 id="step11">Step 11 — Detect MPU6250 on I2C Bus</h2>
+            <p>Run a scan to confirm the sensor is wired correctly and detected:</p>
+            <pre>sudo i2cdetect -y 1</pre>
+            <p>Expected output:</p>
+            <pre>     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
 00:          -- -- -- -- -- -- -- -- -- -- -- -- --
 10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -313,34 +583,29 @@ pip install mpu6050-raspberrypi</pre>
 50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 60: -- -- -- -- -- -- -- -- <span class="kw">68</span> -- -- -- -- -- -- --
 70: -- -- -- -- -- -- -- --</pre>
-          <blockquote>
-            <code>68</code> appearing = MPU6250 successfully detected ✅<br>
-            Nothing showing = recheck your wiring
-          </blockquote>
+            <blockquote><code>68</code> appearing = MPU6250 successfully detected ✅<br>Nothing showing = recheck your wiring</blockquote>
 
-          <h2 id="step12">Step 12 — Read IMU Data</h2>
-          <p>Create a Python script:</p>
-          <pre>nano read_mpu.py</pre>
-          <p>Paste this code:</p>
-          <pre><span class="kw">import</span> smbus2
+            <h2 id="step12">Step 12 — Read IMU Data</h2>
+            <p>Create a Python script:</p>
+            <pre>nano read_mpu.py</pre>
+            <p>Paste this code:</p>
+            <pre><span class="kw">import</span> smbus2
 <span class="kw">import</span> time
 
-MPU6250_ADDR = 0x68   <span class="cmt"># Change to 0x69 if AD0 is connected to 3.3V</span>
+MPU6250_ADDR = 0x68
 PWR_MGMT_1   = 0x6B
 ACCEL_XOUT_H = 0x3B
 GYRO_XOUT_H  = 0x43
 TEMP_OUT_H   = 0x41
 
 bus = smbus2.SMBus(1)
-
-<span class="cmt"># Wake up the MPU6250</span>
 bus.write_byte_data(MPU6250_ADDR, PWR_MGMT_1, 0x00)
 time.sleep(0.1)
 
 <span class="kw">def</span> read_word(reg):
     high  = bus.read_byte_data(MPU6250_ADDR, reg)
     low   = bus.read_byte_data(MPU6250_ADDR, reg + 1)
-    value = (high << 8) | low
+    value = (high &lt;&lt; 8) | low
     <span class="kw">if</span> value >= 0x8000:
         value -= 65536
     <span class="kw">return</span> value
@@ -368,37 +633,33 @@ print(<span class="str">"MPU6250 Live Data — Press Ctrl+C to stop\n"</span>)
         ax, ay, az = get_accel()
         gx, gy, gz = get_gyro()
         temp       = get_temp()
-
         print(f<span class="str">"Accel (g)    X:{ax:+.3f}  Y:{ay:+.3f}  Z:{az:+.3f}"</span>)
         print(f<span class="str">"Gyro (°/s)   X:{gx:+.3f}  Y:{gy:+.3f}  Z:{gz:+.3f}"</span>)
         print(f<span class="str">"Temp (°C)    {temp:.2f}"</span>)
         print(<span class="str">"-"</span> * 45)
         time.sleep(0.5)
-
 <span class="kw">except</span> KeyboardInterrupt:
     print(<span class="str">"Stopped."</span>)</pre>
-
-          <p>Save with <code>Ctrl+X → Y → Enter</code>, then run it:</p>
-          <pre>python3 read_mpu.py</pre>
-
-          <h3>Expected output</h3>
-          <pre>Accel (g)    X:-0.012  Y:+0.004  Z:+1.001
+            <p>Save with <code>Ctrl+X → Y → Enter</code>, then run it:</p>
+            <pre>python3 read_mpu.py</pre>
+            <h3>Expected output</h3>
+            <pre>Accel (g)    X:-0.012  Y:+0.004  Z:+1.001
 Gyro (°/s)   X:+0.213  Y:-0.152  Z:+0.031
 Temp (°C)    28.54
 ---------------------------------------------</pre>
 
-          <h2 id="troubleshoot">Troubleshooting</h2>
-          <table>
-            <tr><th>Problem</th><th>Fix</th></tr>
-            <tr><td><code>i2cdetect</code> shows nothing</td><td>Recheck wiring — SDA→Pin3, SCL→Pin5, VCC→3.3V, GND→GND</td></tr>
-            <tr><td>Permission denied on I2C</td><td>Run <code>sudo usermod -aG i2c pi</code> then log out and back in</td></tr>
-            <tr><td><code>ModuleNotFoundError: smbus2</code></td><td>Run <code>source .venv/bin/activate</code> then <code>pip install smbus2</code></td></tr>
-            <tr><td>All readings are 0</td><td>Reinstall: <code>pip uninstall smbus2 && pip install smbus2</code></td></tr>
-            <tr><td>Address shows <code>69</code> not <code>68</code></td><td>Change <code>MPU6250_ADDR = 0x69</code> in the script</td></tr>
-          </table>
+            <h2 id="troubleshoot">Troubleshooting</h2>
+            <table>
+              <tr><th>Problem</th><th>Fix</th></tr>
+              <tr><td><code>i2cdetect</code> shows nothing</td><td>Recheck wiring — SDA→Pin3, SCL→Pin5, VCC→3.3V, GND→GND</td></tr>
+              <tr><td>Permission denied on I2C</td><td>Run <code>sudo usermod -aG i2c pi</code> then log out and back in</td></tr>
+              <tr><td><code>ModuleNotFoundError: smbus2</code></td><td>Run <code>source .venv/bin/activate</code> then <code>pip install smbus2</code></td></tr>
+              <tr><td>All readings are 0</td><td>Reinstall: <code>pip uninstall smbus2 &amp;&amp; pip install smbus2</code></td></tr>
+              <tr><td>Address shows <code>69</code> not <code>68</code></td><td>Change <code>MPU6250_ADDR = 0x69</code> in the script</td></tr>
+            </table>
 
-          <h2 id="summary2">Full Flow Summary</h2>
-          <div class="wr-flow-diagram"><span class="step">Enable I2C → sudo raspi-config</span>
+            <h2 id="summary2">Full Flow Summary</h2>
+            <div class="wr-flow-diagram"><span class="step">Enable I2C → sudo raspi-config</span>
             │
   Wire MPU6250:
   VCC→Pin1(3.3V) | GND→Pin6 | SDA→Pin3 | SCL→Pin5
@@ -410,17 +671,583 @@ Temp (°C)    28.54
             │
   <span class="step">python3 read_mpu.py  ✅  Live IMU readings!</span></div>
 
-          <div style="margin-top: 60px; display:flex; gap:16px; flex-wrap:wrap;">
-            <div class="main-blue-button"><a href="motor-control.html">Next: Motor Control →</a></div>
-            <div class="main-white-button" style="border: 1px solid var(--wr-line-2); border-radius: 4px;"><a href="../index.html" style="color: var(--wr-text) !important; background: transparent !important;">← Back to Overview</a></div>
-          </div>
+            <div style="margin-top:40px; display:flex; gap:14px; flex-wrap:wrap;">
+              <button class="main-blue-button" onclick="switchChapter('ch2')" style="border:none;cursor:pointer;">
+                <a style="pointer-events:none;">Next: Angles &amp; Calibration →</a>
+              </button>
+            </div>
+          </div><!-- /ch1 -->
+
+
+          <!-- ══════════════════════════════════════════
+               CHAPTER 2 — Angles, Live Plot & Calibration
+               ══════════════════════════════════════════ -->
+          <div class="wr-chapter" id="ch2">
+
+            <div class="wr-chapter-header">
+              <span class="ch-badge">CH 02</span>
+              <div>
+                <h2 style="margin:0;">Angle Calculation, Low Pass Filter, Live Plotting &amp; Calibration</h2>
+                <p style="margin:4px 0 0; font-size:13px; color:var(--wr-muted,#7a8094);">Continuing from Chapter 01 — MPU6250 already connected and giving readings</p>
+              </div>
+            </div>
+
+            <div class="wr-callout success">
+              <span class="co-icon">✅</span>
+              <div class="co-body">
+                <strong>Prerequisites from Chapter 01</strong>
+                MPU6250 is connected and delivering accelerometer data (X, Y, Z) in m/s² and gyroscope data (X, Y, Z) in °/s.
+              </div>
+            </div>
+
+            <h2 id="c2-lpf-why">1. Why We Need a Low Pass Filter</h2>
+            <p>When you look at the accelerometer plot, even when the sensor is <strong>completely still</strong>, the readings are not a clean flat line — they shake around the true value.</p>
+            <pre>Without Low Pass Filter:           With Low Pass Filter:
+
+ Accel Z                            Accel Z
+  |  ~~~~~~~~~~~~~~~~~~~~            |  ──────────────────
+  |~~~~                              |
+  └──────────────► time              └──────────────► time
+  Noisy, hard to use                 Smooth, clean signal</pre>
+            <p>This noise comes from vibration from motors or mechanical movement, electrical noise in the circuit, and sensor sensitivity picking up tiny movements. If we calculate angles from noisy data, the angles will also jump around wildly. The Low Pass Filter <strong>smooths out the noise</strong> by only allowing slow changes through and blocking fast spikes.</p>
+
+            <h2 id="c2-lpf-how">2. How the Low Pass Filter Works</h2>
+            <p>Think of it like this: <em>"The new reading should be mostly the old value, with just a little bit of the new raw reading mixed in."</em></p>
+            <div class="math-block">
+              <div class="math-label">Low Pass Filter Formula</div>
+              filtered = alpha × raw_new + (1 - alpha) × filtered_old
+            </div>
+            <p>Where <strong>alpha</strong> is a value between 0 and 1:</p>
+            <table>
+              <tr><th>Alpha Value</th><th>Effect</th></tr>
+              <tr><td><code>alpha = 1.0</code></td><td>No filtering — raw noisy signal passes through</td></tr>
+              <tr><td><code>alpha = 0.5</code></td><td>Medium filtering — balanced</td></tr>
+              <tr><td><code>alpha = 0.1</code></td><td>Heavy filtering — very smooth but slow to respond</td></tr>
+              <tr><td><code class="alpha-good">alpha = 0.2</code></td><td class="alpha-good">Good for IMU — smooth but still responsive ✅</td></tr>
+            </table>
+            <h3>Example with numbers</h3>
+            <p>Suppose the sensor is at rest (true value = 9.81 m/s²), but noise spikes to 11.5:</p>
+            <pre>Without filter:  9.81 → 9.81 → 11.5 → 9.81   ← big jump visible
+With filter:     9.81 → 9.81 → 9.93 → 9.87   ← spike absorbed smoothly</pre>
+            <p>We use <code>alpha = 0.2</code> — 80% weight on the previous smooth value (stability) and 20% weight on the new raw reading (responsiveness).</p>
+
+            <h2 id="c2-install">3. Install Libraries for Live Plotting</h2>
+            <p>SSH into your Raspberry Pi:</p>
+            <pre>ssh pi@raspberrypi.local
+source .venv/bin/activate</pre>
+            <p>Install required libraries:</p>
+            <pre>pip install flask
+pip install plotly
+pip install numpy</pre>
+            <table>
+              <tr><th>Library</th><th>Purpose</th></tr>
+              <tr><td><code>flask</code></td><td>Runs a lightweight web server on the Pi</td></tr>
+              <tr><td><code>plotly</code></td><td>Creates interactive live charts in browser</td></tr>
+              <tr><td><code>numpy</code></td><td>Fast math operations</td></tr>
+              <tr><td><code>smbus2</code></td><td>I2C communication with MPU6250 (already installed)</td></tr>
+            </table>
+
+            <h2 id="c2-code">4. Full Code with Explanation</h2>
+            <p>Create the main script:</p>
+            <pre>nano live_angles.py</pre>
+            <p>Paste this full code:</p>
+            <pre><span class="kw">import</span> smbus2, time, math, threading
+<span class="kw">from</span> flask <span class="kw">import</span> Flask, jsonify, render_template_string
+
+<span class="cmt"># ── SECTION 1: MPU6250 REGISTER ADDRESSES ──────────────────</span>
+MPU6250_ADDR = 0x68   <span class="cmt"># Default I2C address (AD0=GND)</span>
+PWR_MGMT_1   = 0x6B   <span class="cmt"># Power management register</span>
+ACCEL_XOUT_H = 0x3B   <span class="cmt"># Accel X high byte register</span>
+
+<span class="cmt"># ── SECTION 2: I2C BUS INITIALIZATION ──────────────────────</span>
+bus = smbus2.SMBus(1)
+bus.write_byte_data(MPU6250_ADDR, PWR_MGMT_1, 0x00)  <span class="cmt"># Wake up</span>
+time.sleep(0.1)
+
+<span class="cmt"># ── SECTION 3: READ RAW 16-BIT VALUE ───────────────────────</span>
+<span class="kw">def</span> read_word(reg):
+    high  = bus.read_byte_data(MPU6250_ADDR, reg)
+    low   = bus.read_byte_data(MPU6250_ADDR, reg + 1)
+    value = (high &lt;&lt; 8) | low
+    <span class="kw">if</span> value >= 0x8000:
+        value -= 65536
+    <span class="kw">return</span> value
+
+<span class="cmt"># ── SECTION 4: LOW PASS FILTER SETUP ───────────────────────</span>
+ALPHA = 0.2
+ax_filtered = ay_filtered = az_filtered = 0.0
+
+<span class="cmt"># ── SECTION 5: GET ACCELEROMETER DATA (with LPF) ───────────</span>
+<span class="kw">def</span> get_accel():
+    <span class="kw">global</span> ax_filtered, ay_filtered, az_filtered
+    ax_raw = (read_word(ACCEL_XOUT_H)     / 16384.0) * 9.81
+    ay_raw = (read_word(ACCEL_XOUT_H + 2) / 16384.0) * 9.81
+    az_raw = (read_word(ACCEL_XOUT_H + 4) / 16384.0) * 9.81
+    ax_filtered = ALPHA * ax_raw + (1 - ALPHA) * ax_filtered
+    ay_filtered = ALPHA * ay_raw + (1 - ALPHA) * ay_filtered
+    az_filtered = ALPHA * az_raw + (1 - ALPHA) * az_filtered
+    <span class="kw">return</span> ax_filtered, ay_filtered, az_filtered
+
+<span class="cmt"># ── SECTION 6: ANGLE CALCULATION ───────────────────────────</span>
+<span class="cmt"># Roll  = atan2(ay, az)  — tilt left/right</span>
+<span class="cmt"># Pitch = atan2(-ax, sqrt(ay²+az²))  — tilt forward/back</span>
+timestamps = []; roll_data = []; pitch_data = []
+start_time = time.time()
+
+<span class="kw">def</span> calculate_angles():
+    <span class="kw">while</span> True:
+        ax, ay, az = get_accel()
+        roll  = math.degrees(math.atan2(ay, az))
+        pitch = math.degrees(math.atan2(-ax, math.sqrt(ay**2 + az**2)))
+        elapsed = round(time.time() - start_time, 2)
+        timestamps.append(elapsed)
+        roll_data.append(round(roll, 3))
+        pitch_data.append(round(pitch, 3))
+        <span class="kw">if</span> len(timestamps) > 200:
+            timestamps.pop(0); roll_data.pop(0); pitch_data.pop(0)
+        time.sleep(0.05)
+
+<span class="cmt"># ── SECTION 7: FLASK WEB SERVER + LIVE CHART ───────────────</span>
+app = Flask(__name__)
+HTML_PAGE = <span class="str">"""... (see full code in file) ..."""</span>
+
+@app.route(<span class="str">'/'</span>)
+<span class="kw">def</span> index(): <span class="kw">return</span> render_template_string(HTML_PAGE)
+
+@app.route(<span class="str">'/data'</span>)
+<span class="kw">def</span> data(): <span class="kw">return</span> jsonify({'time': timestamps, 'roll': roll_data, 'pitch': pitch_data})
+
+<span class="cmt"># ── SECTION 8: MAIN ─────────────────────────────────────────</span>
+<span class="kw">if</span> __name__ == <span class="str">'__main__'</span>:
+    thread = threading.Thread(target=calculate_angles, daemon=True)
+    thread.start()
+    print(<span class="str">"Low Pass Filter active! (alpha = 0.2)"</span>)
+    print(<span class="str">"Open your browser → http://raspberrypi.local:5000"</span>)
+    app.run(host=<span class="str">'0.0.0.0'</span>, port=5000)</pre>
+
+            <h3>Code Summary — What Each Section Does</h3>
+            <table>
+              <tr><th>Section</th><th>What it does</th></tr>
+              <tr><td>Section 1</td><td>Defines I2C address and register locations inside the MPU6250 chip</td></tr>
+              <tr><td>Section 2</td><td>Opens I2C bus and wakes up the sensor from sleep mode</td></tr>
+              <tr><td>Section 3</td><td>Reads raw 16-bit integer by combining two 8-bit bytes</td></tr>
+              <tr><td>Section 4</td><td>Sets up Low Pass Filter constant (alpha=0.2) and previous filtered values</td></tr>
+              <tr><td>Section 5</td><td>Reads accelerometer, converts to m/s², applies Low Pass Filter</td></tr>
+              <tr><td>Section 6</td><td>Calculates Roll &amp; Pitch from filtered accelerometer using atan2</td></tr>
+              <tr><td>Section 7</td><td>Flask web server serves live chart page and JSON data endpoint</td></tr>
+              <tr><td>Section 8</td><td>Starts IMU thread and web server together</td></tr>
+            </table>
+
+            <h3>Filter Flow Diagram</h3>
+            <div class="wr-flow-diagram">Raw Accelerometer Reading (noisy)
+            │
+            ▼
+┌───────────────────────┐
+│   Low Pass Filter      │  ← filtered = 0.2 × raw + 0.8 × prev
+│   alpha = 0.2          │  ← removes vibration and noise spikes
+└───────────────────────┘
+            │
+            ▼
+┌───────────────────────┐
+│  atan2 Angle Formula  │  ← Roll = atan2(ay, az)
+│  (from accel only)    │  ← Pitch = atan2(-ax, sqrt(ay²+az²))
+└───────────────────────┘
+            │
+            ▼
+    Clean Angle (°) ✅</div>
+
+            <h2 id="c2-run">5. Run &amp; View in Browser</h2>
+            <p>Run the server on the Pi:</p>
+            <pre>python3 live_angles.py</pre>
+            <p>You should see:</p>
+            <pre>Low Pass Filter active! (alpha = 0.2)
+Live angle server running!
+Open your browser and go to: http://raspberrypi.local:5000</pre>
+            <p>Open on your laptop browser:</p>
+            <pre>http://raspberrypi.local:5000</pre>
+            <blockquote>If that doesn't work, use the Pi's IP address: <code>http://192.168.x.x:5000</code></blockquote>
+            <p>You will see a <strong>live graph updating every 200ms</strong> showing smooth Roll and Pitch angles.</p>
+
+            <h2 id="c2-cal-why">6. Calibration — Why It Is Needed</h2>
+            <p>Even with the Low Pass Filter applied, if the sensor has a built-in bias error, the angles will still be offset from the true value.</p>
+            <div class="wr-callout warn">
+              <span class="co-icon">⚠️</span>
+              <div class="co-body">
+                <strong>Problem — Sensor Bias at Rest</strong>
+                Even when completely still, the sensor shows: Accel X ≈ 63.8 m/s² (should be 0), Accel Y ≈ −2.9 m/s² (should be 0), Accel Z ≈ 11.8 m/s² (should be 9.81). This is manufacturing bias — the LPF smooths noise but cannot fix it.
+              </div>
+            </div>
+            <table class="wr-compare">
+              <tr><th></th><th>Without Calibration</th><th>With Calibration</th></tr>
+              <tr><td>Accel X at rest</td><td class="bad">~63.8 m/s² ❌</td><td class="good">~0.0 m/s² ✅</td></tr>
+              <tr><td>Accel Y at rest</td><td class="bad">~-2.9 m/s² ❌</td><td class="good">~0.0 m/s² ✅</td></tr>
+              <tr><td>Accel Z at rest</td><td class="bad">~11.8 m/s² ❌</td><td class="good">~9.81 m/s² ✅</td></tr>
+              <tr><td>Angles accurate</td><td class="bad">Offset ❌</td><td class="good">Correct ✅</td></tr>
+            </table>
+
+            <h2 id="c2-cal-how">7. How to Calibrate the MPU6250</h2>
+            <h3>Step 7.1 — Place Sensor Flat and Still</h3>
+            <p>Place the MPU6250 on a <strong>completely flat surface</strong>, do not touch it during calibration.</p>
+            <h3>Step 7.2 — Run Calibration Script</h3>
+            <pre>nano calibrate_mpu.py</pre>
+            <p>Paste this:</p>
+            <pre><span class="kw">import</span> smbus2, time
+
+MPU6250_ADDR = 0x68
+PWR_MGMT_1   = 0x6B
+ACCEL_XOUT_H = 0x3B
+
+bus = smbus2.SMBus(1)
+bus.write_byte_data(MPU6250_ADDR, PWR_MGMT_1, 0x00)
+time.sleep(0.1)
+
+<span class="kw">def</span> read_word(reg):
+    high  = bus.read_byte_data(MPU6250_ADDR, reg)
+    low   = bus.read_byte_data(MPU6250_ADDR, reg + 1)
+    value = (high &lt;&lt; 8) | low
+    <span class="kw">if</span> value >= 0x8000: value -= 65536
+    <span class="kw">return</span> value
+
+<span class="kw">def</span> get_accel():
+    ax = (read_word(ACCEL_XOUT_H)     / 16384.0) * 9.81
+    ay = (read_word(ACCEL_XOUT_H + 2) / 16384.0) * 9.81
+    az = (read_word(ACCEL_XOUT_H + 4) / 16384.0) * 9.81
+    <span class="kw">return</span> ax, ay, az
+
+SAMPLES = 500
+print(f<span class="str">"Collecting {SAMPLES} samples... Keep sensor FLAT and STILL!\n"</span>)
+time.sleep(2)
+
+ax_sum = ay_sum = az_sum = 0.0
+<span class="kw">for</span> i <span class="kw">in</span> range(SAMPLES):
+    ax, ay, az = get_accel()
+    ax_sum += ax; ay_sum += ay; az_sum += az
+    time.sleep(0.005)
+
+ax_off = ax_sum / SAMPLES
+ay_off = ay_sum / SAMPLES
+az_off = (az_sum / SAMPLES) - 9.81  <span class="cmt"># subtract expected gravity</span>
+
+print(<span class="str">"=" * 40</span>)
+print(<span class="str">"CALIBRATION OFFSETS (copy these!):"</span>)
+print(<span class="str">"=" * 40</span>)
+print(f<span class="str">"ACCEL_X_OFFSET = {ax_off:.4f}"</span>)
+print(f<span class="str">"ACCEL_Y_OFFSET = {ay_off:.4f}"</span>)
+print(f<span class="str">"ACCEL_Z_OFFSET = {az_off:.4f}"</span>)
+print(<span class="str">"=" * 40</span>)</pre>
+            <p>Save and run:</p>
+            <pre>python3 calibrate_mpu.py</pre>
+            <h3>Example Output</h3>
+            <pre>Collecting 500 samples... Keep sensor FLAT and STILL!
+
+========================================
+CALIBRATION OFFSETS (copy these!):
+========================================
+ACCEL_X_OFFSET = -0.0231
+ACCEL_Y_OFFSET =  0.0154
+ACCEL_Z_OFFSET =  0.0412
+========================================</pre>
+            <blockquote>📋 <strong>Copy and save these values</strong> — you will use them in the next step.</blockquote>
+
+            <h2 id="c2-cal-apply">8. Apply Calibration Offsets</h2>
+            <p>Add your offsets at the top of <code>live_angles.py</code>:</p>
+            <pre><span class="cmt"># ── Calibration Offsets (paste YOUR values here) ──────────</span>
+ACCEL_X_OFFSET =  0.0000   <span class="cmt"># Replace with your value</span>
+ACCEL_Y_OFFSET =  0.0000   <span class="cmt"># Replace with your value</span>
+ACCEL_Z_OFFSET =  0.0000   <span class="cmt"># Replace with your value</span></pre>
+            <p>Update <code>get_accel()</code> to subtract offsets after filtering:</p>
+            <pre><span class="kw">def</span> get_accel():
+    <span class="kw">global</span> ax_filtered, ay_filtered, az_filtered
+    ax_raw = (read_word(ACCEL_XOUT_H)     / 16384.0) * 9.81
+    ay_raw = (read_word(ACCEL_XOUT_H + 2) / 16384.0) * 9.81
+    az_raw = (read_word(ACCEL_XOUT_H + 4) / 16384.0) * 9.81
+    ax_filtered = ALPHA * ax_raw + (1 - ALPHA) * ax_filtered
+    ay_filtered = ALPHA * ay_raw + (1 - ALPHA) * ay_filtered
+    az_filtered = ALPHA * az_raw + (1 - ALPHA) * az_filtered
+    <span class="kw">return</span> (ax_filtered - ACCEL_X_OFFSET,
+            ay_filtered - ACCEL_Y_OFFSET,
+            az_filtered - ACCEL_Z_OFFSET)</pre>
+            <p>Run the live server again:</p>
+            <pre>python3 live_angles.py</pre>
+            <p>Open <code>http://raspberrypi.local:5000</code> — you should now see <strong>clean, stable, smooth angle readings ✅</strong></p>
+
+            <h2 id="c2-summary">Full Flow Summary</h2>
+            <div class="wr-flow-diagram">MPU6250 giving raw accel data ✅
+            │
+  python3 calibrate_mpu.py
+  → Place sensor flat → collect 500 samples
+  → Copy the 3 accel offset values
+            │
+  Add offsets + Low Pass Filter (α=0.2) to live_angles.py
+            │
+  pip install flask plotly numpy
+            │
+  python3 live_angles.py
+            │
+  Open browser → http://raspberrypi.local:5000
+            │
+  Live smooth Roll &amp; Pitch graph! ✅
+
+Signal path:
+  Raw accel → Low Pass Filter (α=0.2) → atan2 angle formula → Clean angle</div>
+
+            <div style="margin-top:40px; display:flex; gap:14px; flex-wrap:wrap;">
+              <button class="main-blue-button" onclick="switchChapter('ch3')" style="border:none;cursor:pointer;">
+                <a style="pointer-events:none;">Next: Kalman Filter →</a>
+              </button>
+              <button class="main-white-button" onclick="switchChapter('ch1')" style="border:1px solid var(--wr-line-2);border-radius:4px;background:transparent;cursor:pointer;">
+                <a style="pointer-events:none; color:var(--wr-text)!important; background:transparent!important;">← Back: OS Setup</a>
+              </button>
+            </div>
+          </div><!-- /ch2 -->
+
+
+          <!-- ══════════════════════════════════════════
+               CHAPTER 3 — Kalman Filter Implementation
+               ══════════════════════════════════════════ -->
+          <div class="wr-chapter" id="ch3">
+
+            <div class="wr-chapter-header">
+              <span class="ch-badge">CH 03</span>
+              <div>
+                <h2 style="margin:0;">Two-State Kalman Filter Implementation</h2>
+                <p style="margin:4px 0 0; font-size:13px; color:var(--wr-muted,#7a8094);">Orientation estimation with simultaneous gyro bias correction for the MPU9250/MPU6050</p>
+              </div>
+            </div>
+
+            <h2 id="kf-intro" style="margin-top:0;">Introduction</h2>
+            <p>This chapter implements a two-state linear Kalman Filter for orientation estimation using IMU data. The filter estimates both the angle and gyroscope bias simultaneously, making it significantly more accurate than simple gyro integration or a single-state Kalman Filter.</p>
+            <p>The implementation covers: State Space Models, State Prediction, Covariance Propagation, Process Noise Modeling, Measurement Updates, Kalman Gain Computation, and Sensor Fusion.</p>
+
+            <h2 id="kf-why">Why a Two-State Kalman Filter?</h2>
+            <p>A gyroscope provides smooth angular velocity measurements but suffers from drift due to bias.</p>
+            <table>
+              <tr><th></th><th>Example</th></tr>
+              <tr><td>Actual angular velocity</td><td><code>0 deg/s</code></td></tr>
+              <tr><td>Gyroscope output</td><td><code>0.5 deg/s</code> ← constant offset = gyro bias</td></tr>
+            </table>
+            <p>If gyro measurements are integrated without compensation, orientation estimates continuously drift over time. The Kalman Filter solves this by estimating <strong>Orientation Angle</strong> and <strong>Gyroscope Bias</strong> simultaneously.</p>
+
+            <h2 id="kf-state">State Vector</h2>
+            <p>The state vector is defined as:</p>
+            <div class="math-block">
+              <div class="math-label">State Vector x</div>
+              x = [ θ ]    where  θ = estimated angle
+                  [ b ]           b = estimated gyroscope bias
+            </div>
+            <pre><span class="cmt"># Implementation</span>
+self.x = np.zeros((2,1))
+<span class="cmt"># x[0] = angle,  x[1] = gyro_bias</span></pre>
+
+            <h2 id="kf-transition">State Transition Model</h2>
+            <p>The angle evolves according to:</p>
+            <div class="math-block">
+              <div class="math-label">State Equation</div>
+              θ_k = θ_(k-1) + (ω - b) × Δt
+
+              where:  ω = measured angular velocity
+                      b = estimated gyro bias
+            </div>
+            <p>The state transition matrix becomes:</p>
+            <div class="math-block">
+              <div class="math-label">Transition Matrix F</div>
+              F = [ 1   -dt ]
+                  [ 0    1  ]
+            </div>
+            <pre>F = np.array([
+    [1.0, -dt],
+    [0.0, 1.0]
+])</pre>
+
+            <h2 id="kf-control">Control Matrix</h2>
+            <p>Gyroscope measurements act as system input.</p>
+            <div class="math-block">
+              <div class="math-label">Control Matrix B</div>
+              B = [ dt ]
+                  [ 0  ]
+            </div>
+            <pre>B = np.array([
+    [dt],
+    [0.0]
+])</pre>
+
+            <h2 id="kf-predict">Prediction Step</h2>
+            <p>The Kalman Filter first predicts the next state before receiving a measurement.</p>
+            <div class="math-block">
+              <div class="math-label">Prediction Equation</div>
+              x_k⁻ = F × x_(k-1) + B × u
+            </div>
+            <pre>self.x = F @ self.x + B * gyro_rate</pre>
+            <p>This produces a predicted estimate of angle and gyroscope bias.</p>
+
+            <h2 id="kf-cov">Covariance Matrix</h2>
+            <p>The covariance matrix represents uncertainty in the estimated states.</p>
+            <div class="math-block">
+              <div class="math-label">Covariance Matrix P</div>
+              P = [ P_θθ   P_θb ]
+                  [ P_bθ   P_bb ]
+            </div>
+            <pre><span class="cmt"># Initial: moderate uncertainty</span>
+self.P = np.eye(2)
+<span class="cmt"># P = [[1, 0], [0, 1]]</span></pre>
+
+            <h2 id="kf-q">Process Noise Matrix</h2>
+            <p>The process noise matrix models uncertainty in the prediction model.</p>
+            <div class="math-block">
+              <div class="math-label">Process Noise Q</div>
+              Q = [ Q_angle    0      ]
+                  [   0      Q_bias   ]
+            </div>
+            <pre>Q = np.diag([
+    self.Q_angle,   <span class="cmt"># uncertainty in angle prediction</span>
+    self.Q_bias     <span class="cmt"># uncertainty in bias estimation</span>
+])</pre>
+
+            <h2 id="kf-covprop">Covariance Propagation</h2>
+            <p>After prediction, uncertainty increases because every prediction introduces possible error.</p>
+            <div class="math-block">
+              <div class="math-label">Covariance Propagation</div>
+              P_k⁻ = F × P_(k-1) × F^T + Q
+            </div>
+            <pre>self.P = F @ self.P @ F.T + Q</pre>
+
+            <h2 id="kf-meas">Measurement Model</h2>
+            <p>The accelerometer provides an angle estimate. It directly measures angle but does not measure gyro bias.</p>
+            <div class="math-block">
+              <div class="math-label">Measurement</div>
+              z = θ_acc          H = [ 1  0 ]
+            </div>
+            <pre>self.H = np.array([
+    [1.0, 0.0]
+])</pre>
+
+            <h2 id="kf-residual">Residual Calculation</h2>
+            <p>The residual represents the disagreement between prediction and measurement.</p>
+            <div class="math-block">
+              <div class="math-label">Residual</div>
+              y = z - H × x
+
+              If prediction and measurement agree  →  Residual ≈ 0
+              If they disagree                     →  Residual becomes large
+            </div>
+            <pre>y = meas_angle - (H @ self.x)</pre>
+
+            <h2 id="kf-dynR">Dynamic Measurement Noise</h2>
+            <p>Instead of a fixed measurement noise covariance R, this implementation uses R_dynamic.</p>
+            <pre>update(gyro_rate, meas_angle, R_dynamic)</pre>
+            <table>
+              <tr><th>Condition</th><th>Behaviour</th></tr>
+              <tr><td>Leg is stationary</td><td>Accelerometer is trusted more → Small R</td></tr>
+              <tr><td>Leg is moving rapidly</td><td>Accelerometer becomes noisy → Large R</td></tr>
+            </table>
+            <p>This improves robustness during gait analysis.</p>
+
+            <h2 id="kf-innov">Innovation Covariance</h2>
+            <p>Represents expected uncertainty in the residual.</p>
+            <div class="math-block">
+              <div class="math-label">Innovation Covariance</div>
+              S = H × P × H^T + R
+            </div>
+            <pre>S = (H @ P @ H.T) + R_dynamic</pre>
+
+            <h2 id="kf-gain">Kalman Gain</h2>
+            <p>The Kalman Gain determines how much correction should be applied.</p>
+            <div class="math-block">
+              <div class="math-label">Kalman Gain</div>
+              K = P × H^T × S⁻¹
+            </div>
+            <pre>self.K = (P @ H.T) / S</pre>
+            <table>
+              <tr><th>Kalman Gain K</th><th>Meaning</th></tr>
+              <tr><td>Large K</td><td>Trust measurement more</td></tr>
+              <tr><td>Small K</td><td>Trust prediction more</td></tr>
+            </table>
+
+            <h2 id="kf-update">State Update</h2>
+            <p>The state estimate is corrected using the residual. Both angle and gyro bias are corrected simultaneously.</p>
+            <div class="math-block">
+              <div class="math-label">State Update</div>
+              x⁺ = x⁻ + K × y
+            </div>
+            <pre>self.x = self.x + self.K * y</pre>
+
+            <h2 id="kf-covupdate">Covariance Update</h2>
+            <p>After incorporating a measurement, uncertainty decreases.</p>
+            <div class="math-block">
+              <div class="math-label">Covariance Update</div>
+              P⁺ = (I - K × H) × P⁻
+            </div>
+            <pre>self.P = (np.eye(2) - self.K @ self.H) @ self.P</pre>
+
+            <h2 id="kf-outputs">Estimated Outputs</h2>
+            <h3>Angle Estimate θ</h3>
+            <pre>self.x[0, 0]</pre>
+            <h3>Gyroscope Bias Estimate b</h3>
+            <pre>self.x[1, 0]
+
+<span class="cmt"># Accessed via property:</span>
+@property
+<span class="kw">def</span> bias(self):
+    <span class="kw">return</span> float(self.x[1,0])</pre>
+
+            <h2 id="kf-advantages">Advantages of This Implementation</h2>
+            <div class="wr-kf-steps">
+              <div class="wr-kf-step">
+                <div class="kf-step-label">vs. Simple Gyro Integration</div>
+                <h4>Drift Reduction</h4>
+                <p>Reduces orientation drift by continuously estimating and subtracting gyro bias.</p>
+              </div>
+              <div class="wr-kf-step">
+                <div class="kf-step-label">vs. Simple Gyro Integration</div>
+                <h4>Bias Estimation</h4>
+                <p>Explicitly estimates the gyroscope bias term that causes long-term drift.</p>
+              </div>
+              <div class="wr-kf-step">
+                <div class="kf-step-label">vs. Single-State Kalman</div>
+                <h4>Explicit Bias Modelling</h4>
+                <p>Models sensor bias as a dedicated state rather than treating it as noise.</p>
+              </div>
+              <div class="wr-kf-step">
+                <div class="kf-step-label">vs. Single-State Kalman</div>
+                <h4>Accuracy for Gait Analysis</h4>
+                <p>Better suited for continuous human motion where orientation must remain accurate over time.</p>
+              </div>
+            </div>
+
+            <h2 id="kf-conclusion">Conclusion</h2>
+            <p>A two-state Kalman Filter was implemented where the state vector consists of orientation angle and gyroscope bias. Gyroscope measurements are used during prediction, while accelerometer-derived angles are used during measurement updates. Dynamic measurement noise adaptation improves performance during periods of high motion, making the filter suitable for real-time human gait analysis and wearable sensing applications.</p>
+
+            <div class="wr-flow-diagram"><span class="step">IMU delivers accel + gyro readings</span>
+            │
+  Kalman Predict:
+  x⁻ = F·x + B·gyro_rate
+  P⁻ = F·P·Fᵀ + Q
+            │
+  Compute accelerometer angle → z = atan2(ay, az)
+            │
+  Kalman Update:
+  y = z - H·x⁻
+  S = H·P⁻·Hᵀ + R_dynamic
+  K = P⁻·Hᵀ / S
+  x⁺ = x⁻ + K·y
+  P⁺ = (I - K·H)·P⁻
+            │
+  <span class="step">Output: Angle θ + Bias b  ✅  Drift-free orientation!</span></div>
+
+            <div style="margin-top:40px; display:flex; gap:14px; flex-wrap:wrap;">
+              <div class="main-blue-button"><a href="motor-control.html">Next: Motor Control →</a></div>
+              <button class="main-white-button" onclick="switchChapter('ch2')" style="border:1px solid var(--wr-line-2);border-radius:4px;background:transparent;cursor:pointer;">
+                <a style="pointer-events:none; color:var(--wr-text)!important; background:transparent!important;">← Back: Angles &amp; Calibration</a>
+              </button>
+            </div>
+          </div><!-- /ch3 -->
 
         </main>
       </div>
     </div>
   </section>
 
-  <!-- ============ FOOTER ============ -->
+  <!-- FOOTER -->
   <footer>
     <div class="container">
       <div class="row">
@@ -438,14 +1265,45 @@ Temp (°C)    28.54
   <script src="../assets/js/animation.js"></script>
   <script src="../assets/js/imagesloaded.js"></script>
   <script src="../assets/js/templatemo-custom.js"></script>
+
   <script>
-    // TOC active-state scroll tracking
+    // ── Chapter switching ────────────────────────────────────────
+    function switchChapter(id) {
+      // Hide all chapters
+      document.querySelectorAll('.wr-chapter').forEach(el => el.classList.remove('active'));
+      // Show selected
+      document.getElementById(id).classList.add('active');
+
+      // Update pills
+      document.querySelectorAll('.wr-chapter-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.chapter === id);
+      });
+
+      // Update TOC
+      document.querySelectorAll('.toc-chapter-group').forEach(g => g.style.display = 'none');
+      document.getElementById('toc-' + id).style.display = 'block';
+
+      // Scroll to top of content
+      window.scrollTo({ top: document.querySelector('.wr-doc-section').offsetTop - 80, behavior: 'smooth' });
+    }
+
+    // Pill click listeners
+    document.querySelectorAll('.wr-chapter-pill').forEach(btn => {
+      btn.addEventListener('click', () => switchChapter(btn.dataset.chapter));
+    });
+
+    // ── TOC active-state scroll tracking ────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
       const tocLinks = document.querySelectorAll('.wr-doc-toc a');
-      const headings = Array.from(tocLinks).map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+      const headings = Array.from(tocLinks)
+        .map(a => document.querySelector(a.getAttribute('href')))
+        .filter(Boolean);
+
       const onScroll = () => {
         let activeIdx = 0;
-        headings.forEach((h, i) => { if (h.getBoundingClientRect().top - 120 <= 0) activeIdx = i; });
+        headings.forEach((h, i) => {
+          if (h.getBoundingClientRect().top - 120 <= 0) activeIdx = i;
+        });
         tocLinks.forEach((a, i) => a.classList.toggle('active', i === activeIdx));
       };
       window.addEventListener('scroll', onScroll, { passive: true });
